@@ -22,4 +22,8 @@ client.once("ready", () => {
     console.log(`✅ ${client.user.tag} est connecté !`);
 });
 
+process.on("SIGTERM", () => {
+    console.log("⚠️ Railway arrête le bot");
+});
+
 client.login(process.env.TOKEN);
