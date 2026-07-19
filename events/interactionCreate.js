@@ -5,14 +5,15 @@ module.exports = {
 
     async execute(interaction) {
 
+        // Bouton "J'ai compris"
         if (interaction.isButton()) {
 
             if (interaction.customId === "ticket_confirm") {
 
                 const embed = new EmbedBuilder()
-                    .setTitle("🎫 Création du ticket Esprit")
+                    .setTitle("🌟 Choix de la variante")
                     .setDescription(
-                        "Choisis ta variante d'esprit :"
+                        "Choisis la variante de l'esprit que tu souhaites :"
                     );
 
                 const menu = new StringSelectMenuBuilder()
@@ -60,6 +61,8 @@ module.exports = {
                     embeds: [embed],
                     components: [row]
                 });
+
+                return;
             }
 
 
@@ -71,6 +74,27 @@ module.exports = {
                     components: []
                 });
 
+                return;
+            }
+
+        }
+
+
+        // Choix de la variante
+        if (interaction.isStringSelectMenu()) {
+
+            if (interaction.customId === "variant_choice") {
+
+                const variante = interaction.values[0];
+
+                await interaction.reply({
+                    content:
+                        `✅ Variante sélectionnée : **${variante}**\n\n` +
+                        "👻 Maintenant écris l'esprit que tu souhaites.",
+                    ephemeral: true
+                });
+
+                return;
             }
 
         }
