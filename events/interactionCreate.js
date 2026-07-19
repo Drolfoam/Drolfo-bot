@@ -1,12 +1,21 @@
-const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const {
+    EmbedBuilder,
+    ActionRowBuilder,
+    StringSelectMenuBuilder
+} = require("discord.js");
+
+const ticketForm = require("../modals/ticketForm");
+
 
 module.exports = {
     name: "interactionCreate",
 
     async execute(interaction) {
 
-        // Bouton "J'ai compris"
+
+        // Boutons
         if (interaction.isButton()) {
+
 
             if (interaction.customId === "ticket_confirm") {
 
@@ -16,46 +25,25 @@ module.exports = {
                         "Choisis la variante de l'esprit que tu souhaites :"
                     );
 
+
                 const menu = new StringSelectMenuBuilder()
                     .setCustomId("variant_choice")
                     .setPlaceholder("Choisir une variante")
                     .addOptions([
-                        {
-                            label: "Normal",
-                            value: "Normal"
-                        },
-                        {
-                            label: "Or",
-                            value: "Or"
-                        },
-                        {
-                            label: "Gélifié",
-                            value: "Gélifié"
-                        },
-                        {
-                            label: "Galaxy",
-                            value: "Galaxy"
-                        },
-                        {
-                            label: "Iridescent",
-                            value: "Iridescent"
-                        },
-                        {
-                            label: "Gemme",
-                            value: "Gemme"
-                        },
-                        {
-                            label: "Cube",
-                            value: "Cube"
-                        },
-                        {
-                            label: "Quack",
-                            value: "Quack"
-                        }
+                        { label: "Normal", value: "Normal" },
+                        { label: "Or", value: "Or" },
+                        { label: "Gélifié", value: "Gélifié" },
+                        { label: "Galaxy", value: "Galaxy" },
+                        { label: "Iridescent", value: "Iridescent" },
+                        { label: "Gemme", value: "Gemme" },
+                        { label: "Cube", value: "Cube" },
+                        { label: "Quack", value: "Quack" }
                     ]);
+
 
                 const row = new ActionRowBuilder()
                     .addComponents(menu);
+
 
                 await interaction.update({
                     embeds: [embed],
@@ -80,19 +68,58 @@ module.exports = {
         }
 
 
-        // Choix de la variante
+
+        // Menu variante
         if (interaction.isStringSelectMenu()) {
+
 
             if (interaction.customId === "variant_choice") {
 
+
                 const variante = interaction.values[0];
+
+
+                const modal = ticketForm.createTicketForm(variante);
+
+
+                await interaction.showModal(modal);
+
+
+                return;
+            }
+
+        }
+
+
+
+        // Formulaire rempli
+        if (interaction.isModalSubmit()) {
+
+
+            if (interaction.customId.startsWith("ticket_form_")) {
+
+
+                const variante = interaction.customId.replace(
+                    "ticket_form_",
+                    ""
+                );
+
+
+                const esprit = interaction.fields.getTextInputValue("esprit");
+                const pseudo = interaction.fields.getTextInputValue("pseudo_epic");
+                const dispo = interaction.fields.getTextInputValue("disponibilite");
+
 
                 await interaction.reply({
                     content:
-                        `✅ Variante sélectionnée : **${variante}**\n\n` +
-                        "👻 Maintenant écris l'esprit que tu souhaites.",
+                        `✅ Demande reçue !\n\n` +
+                        `🌟 Variante : ${variante}\n` +
+                        `👻 Esprit : ${esprit}\n` +
+                        `🎮 Pseudo Epic : ${pseudo}\n` +
+                        `🕒 Disponibilités : ${dispo}`,
                     ephemeral: true
                 });
+
 
                 return;
             }
