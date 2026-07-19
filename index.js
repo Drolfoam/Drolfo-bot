@@ -14,6 +14,8 @@ const client = new Client({
 
 client.commands = new Collection();
 
+
+// Chargement des commandes
 const commandFiles = fs.readdirSync("./commands").filter(file => file.endsWith(".js"));
 
 for (const file of commandFiles) {
@@ -21,11 +23,28 @@ for (const file of commandFiles) {
     client.commands.set(command.data.name, command);
 }
 
+
+// Chargement des événements
+const eventFiles = fs.readdirSync("./events").filter(file => file.endsWith(".js"));
+
+for (const file of eventFiles) {
+    const event = require(`./events/${file}`);
+
+    if (event.once) {
+        client.once(event.name, (...args) => event.execute(...args));
+    } else {
+        client.on(event.name, (...args) => event.execute(...args));
+    }
+}
+
+
 client.once("ready", () => {
     console.log(`✅ ${client.user.tag} est connecté !`);
 });
 
+
 client.on("interactionCreate", async interaction => {
+
     if (!interaction.isChatInputCommand()) return;
 
     const command = client.commands.get(interaction.commandName);
@@ -37,6 +56,8 @@ client.on("interactionCreate", async interaction => {
     } catch (error) {
         console.error(error);
     }
+
 });
+
 
 client.login(process.env.TOKEN);
