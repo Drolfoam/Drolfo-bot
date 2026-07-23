@@ -9,33 +9,36 @@ const {
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("youtube")
-        .setDescription("Gérer une publication YouTube"),
+        .setDescription("Gérer les publications YouTube"),
 
     async execute(interaction) {
+
         const embed = new EmbedBuilder()
             .setTitle("Panneau YouTube")
             .setDescription(
-                "Gère les publications YouTube de DrolfoBot.\n\n" +
-                "Clique sur **Ajouter une vidéo** pour préparer une publication.\n" +
-                "Tu pourras ensuite ajouter un message, prévisualiser et publier immédiatement ou programmer la vidéo."
+                "Bienvenue dans le panneau de gestion YouTube de DrolfoBot.\n\n" +
+                "Choisis une action ci-dessous."
             );
 
-        const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-                .setCustomId("youtube_add")
-                .setLabel("Ajouter une vidéo")
-                .setStyle(ButtonStyle.Primary),
+        const row = new ActionRowBuilder()
+            .addComponents(
 
-            new ButtonBuilder()
-                .setCustomId("youtube_scheduled")
-                .setLabel("Vidéos programmées")
-                .setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder()
+                    .setCustomId("youtube_add")
+                    .setLabel("Ajouter une vidéo")
+                    .setStyle(ButtonStyle.Primary),
 
-            new ButtonBuilder()
-                .setCustomId("youtube_cancel")
-                .setLabel("Fermer")
-                .setStyle(ButtonStyle.Danger)
-        );
+                new ButtonBuilder()
+                    .setCustomId("youtube_scheduled")
+                    .setLabel("Vidéos programmées")
+                    .setStyle(ButtonStyle.Secondary),
+
+                new ButtonBuilder()
+                    .setCustomId("youtube_cancel")
+                    .setLabel("Fermer")
+                    .setStyle(ButtonStyle.Danger)
+
+            );
 
         await interaction.reply({
             embeds: [embed],
