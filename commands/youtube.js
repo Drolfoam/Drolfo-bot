@@ -25,12 +25,12 @@ module.exports = {
 
                 new ButtonBuilder()
                     .setCustomId("youtube_add")
-                    .setLabel("Ajouter une vidéo")
+                    .setLabel("Publier une vidéo")
                     .setStyle(ButtonStyle.Primary),
 
                 new ButtonBuilder()
-                    .setCustomId("youtube_scheduled")
-                    .setLabel("Vidéos programmées")
+                    .setCustomId("youtube_schedule")
+                    .setLabel("Programmer")
                     .setStyle(ButtonStyle.Secondary),
 
                 new ButtonBuilder()
