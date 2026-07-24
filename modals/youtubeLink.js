@@ -9,7 +9,7 @@ module.exports = {
     create() {
         const modal = new ModalBuilder()
             .setCustomId("youtube_link_modal")
-            .setTitle("Ajouter une vidéo YouTube");
+            .setTitle("Publier une vidéo YouTube");
 
         const link = new TextInputBuilder()
             .setCustomId("youtube_link")
@@ -21,7 +21,7 @@ module.exports = {
         const message = new TextInputBuilder()
             .setCustomId("youtube_message")
             .setLabel("Message personnalisé (facultatif)")
-            .setPlaceholder("Écris ton message ou laisse vide...")
+            .setPlaceholder("Écris ton message ici...")
             .setStyle(TextInputStyle.Paragraph)
             .setRequired(false);
 
