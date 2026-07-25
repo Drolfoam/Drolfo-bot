@@ -3,7 +3,8 @@ const {
     ActionRowBuilder,
     StringSelectMenuBuilder,
     ButtonBuilder,
-    ButtonStyle
+    ButtonStyle,
+    MessageFlags
 } = require("discord.js");
 
 const ticketForm = require("../modals/ticketForm");
@@ -24,7 +25,7 @@ module.exports = {
         if (interaction.isButton()) {
 
             // =========================
-            // TICKETS
+            // TICKET : CONFIRMATION
             // =========================
 
             if (interaction.customId === "ticket_confirm") {
@@ -39,14 +40,38 @@ module.exports = {
                     .setCustomId("variant_choice")
                     .setPlaceholder("Choisir une variante")
                     .addOptions([
-                        { label: "Normal", value: "Normal" },
-                        { label: "Or", value: "Or" },
-                        { label: "Gélifié", value: "Gélifié" },
-                        { label: "Galaxy", value: "Galaxy" },
-                        { label: "Iridescent", value: "Iridescent" },
-                        { label: "Gemme", value: "Gemme" },
-                        { label: "Cube", value: "Cube" },
-                        { label: "Quack", value: "Quack" }
+                        {
+                            label: "Normal",
+                            value: "Normal"
+                        },
+                        {
+                            label: "Or",
+                            value: "Or"
+                        },
+                        {
+                            label: "Gélifié",
+                            value: "Gélifié"
+                        },
+                        {
+                            label: "Galaxy",
+                            value: "Galaxy"
+                        },
+                        {
+                            label: "Iridescent",
+                            value: "Iridescent"
+                        },
+                        {
+                            label: "Gemme",
+                            value: "Gemme"
+                        },
+                        {
+                            label: "Cube",
+                            value: "Cube"
+                        },
+                        {
+                            label: "Quack",
+                            value: "Quack"
+                        }
                     ]);
 
                 const row = new ActionRowBuilder()
@@ -59,6 +84,11 @@ module.exports = {
 
                 return;
             }
+
+
+            // =========================
+            // TICKET : ANNULER
+            // =========================
 
             if (interaction.customId === "ticket_cancel") {
 
@@ -73,7 +103,7 @@ module.exports = {
 
 
             // =========================
-            // YOUTUBE
+            // YOUTUBE : AJOUTER UNE VIDÉO
             // =========================
 
             if (interaction.customId === "youtube_add") {
@@ -85,6 +115,10 @@ module.exports = {
                 return;
             }
 
+
+            // =========================
+            // YOUTUBE : FERMER
+            // =========================
 
             if (interaction.customId === "youtube_cancel") {
 
@@ -99,7 +133,7 @@ module.exports = {
 
 
             // =========================
-            // PUBLIER LA VIDÉO
+            // YOUTUBE : PUBLIER MAINTENANT
             // =========================
 
             if (interaction.customId === "youtube_publish") {
@@ -107,11 +141,14 @@ module.exports = {
                 const embed = interaction.message.embeds[0];
 
                 if (!embed || !embed.fields) {
-                    return interaction.reply({
+
+                    await interaction.reply({
                         content:
                             "❌ Impossible de récupérer les informations de la vidéo.",
-                        ephemeral: true
+                        flags: MessageFlags.Ephemeral
                     });
+
+                    return;
                 }
 
                 const linkField = embed.fields.find(
@@ -123,11 +160,14 @@ module.exports = {
                 );
 
                 if (!linkField) {
-                    return interaction.reply({
+
+                    await interaction.reply({
                         content:
                             "❌ Le lien YouTube est introuvable.",
-                        ephemeral: true
+                        flags: MessageFlags.Ephemeral
                     });
+
+                    return;
                 }
 
                 const link = linkField.value.trim();
@@ -145,45 +185,66 @@ module.exports = {
                     );
 
                 if (!youtubeChannel) {
-                    return interaction.reply({
+
+                    await interaction.reply({
                         content:
                             "❌ Impossible de trouver le salon #youtube.",
-                        ephemeral: true
+                        flags: MessageFlags.Ephemeral
                     });
+
+                    return;
                 }
 
-                const publicationEmbed =
-                    new EmbedBuilder()
-                        .setColor(0xFF0000)
-                        .setTitle("📺 Nouvelle vidéo YouTube !")
-                        .setURL(link)
-                        .setDescription(
-                            customMessage ||
-                            "DrolfoBot a publié une nouvelle vidéo !"
-                        )
-                        .addFields({
-                            name: "🔗 Regarder la vidéo",
-                            value: link
-                        })
-                        .setTimestamp();
+                // =========================
+                // MESSAGE YOUTUBE
+                // =========================
 
-                await youtubeChannel.send({
-                    embeds: [publicationEmbed]
-                });
+                const messageContent =
+                    "🚨 **Nouvelle vidéo de DrolfoamYT !** 🚨\n\n" +
+                    "🎥 Une nouvelle vidéo est disponible !\n\n" +
+                    (customMessage
+                        ? `💬 ${customMessage}\n\n`
+                        : "") +
+                    `🔗 ${link}`;
 
-                await interaction.update({
-                    content:
-                        "✅ La vidéo a été publiée avec succès dans #youtube !",
-                    embeds: [],
-                    components: []
-                });
+                try {
+
+                    await youtubeChannel.send({
+                        content: messageContent
+                    });
+
+                    await interaction.update({
+                        content:
+                            "✅ La vidéo a été publiée avec succès dans #youtube !",
+                        embeds: [],
+                        components: []
+                    });
+
+                } catch (error) {
+
+                    console.error(
+                        "❌ Erreur lors de la publication YouTube :",
+                        error
+                    );
+
+                    if (!interaction.replied) {
+
+                        await interaction.update({
+                            content:
+                                "❌ Impossible de publier la vidéo. Vérifie que Drolfo-bot a bien accès au salon #youtube.",
+                            embeds: [],
+                            components: []
+                        });
+
+                    }
+                }
 
                 return;
             }
 
 
             // =========================
-            // PROGRAMMER
+            // YOUTUBE : PROGRAMMER
             // =========================
 
             if (interaction.customId === "youtube_schedule") {
@@ -191,7 +252,7 @@ module.exports = {
                 await interaction.reply({
                     content:
                         "🗓️ La programmation automatique sera ajoutée dans la prochaine étape.",
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
 
                 return;
@@ -199,7 +260,7 @@ module.exports = {
 
 
             // =========================
-            // VIDÉOS PROGRAMMÉES
+            // YOUTUBE : VIDÉOS PROGRAMMÉES
             // =========================
 
             if (interaction.customId === "youtube_scheduled") {
@@ -216,7 +277,9 @@ module.exports = {
                         new ActionRowBuilder()
                             .addComponents(
                                 new ButtonBuilder()
-                                    .setCustomId("youtube_back")
+                                    .setCustomId(
+                                        "youtube_back"
+                                    )
                                     .setLabel("Retour")
                                     .setStyle(
                                         ButtonStyle.Secondary
@@ -230,7 +293,7 @@ module.exports = {
 
 
             // =========================
-            // RETOUR AU PANNEAU
+            // YOUTUBE : RETOUR
             // =========================
 
             if (interaction.customId === "youtube_back") {
@@ -281,7 +344,7 @@ module.exports = {
 
 
         // =========================
-        // MENU VARIANTE
+        // MENU DE VARIANTE
         // =========================
 
         if (interaction.isStringSelectMenu()) {
@@ -399,7 +462,7 @@ module.exports = {
                     await interaction.reply({
                         content:
                             "❌ Le lien fourni ne semble pas être un lien YouTube valide.",
-                        ephemeral: true
+                        flags: MessageFlags.Ephemeral
                     });
 
                     return;
@@ -476,7 +539,7 @@ module.exports = {
                 await interaction.reply({
                     embeds: [embed],
                     components: [row],
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
 
                 return;
