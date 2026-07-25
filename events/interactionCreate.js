@@ -10,6 +10,8 @@ const ticketForm = require("../modals/ticketForm");
 const youtubeLink = require("../modals/youtubeLink");
 const createTicket = require("../ticketSystem/createTicket");
 
+const YOUTUBE_CHANNEL_ID = "1523787199009783858";
+
 module.exports = {
     name: "interactionCreate",
 
@@ -21,9 +23,9 @@ module.exports = {
 
         if (interaction.isButton()) {
 
-            // -------------------------
+            // =========================
             // TICKETS
-            // -------------------------
+            // =========================
 
             if (interaction.customId === "ticket_confirm") {
 
@@ -70,9 +72,9 @@ module.exports = {
             }
 
 
-            // -------------------------
+            // =========================
             // YOUTUBE
-            // -------------------------
+            // =========================
 
             if (interaction.customId === "youtube_add") {
 
@@ -95,6 +97,106 @@ module.exports = {
                 return;
             }
 
+
+            // =========================
+            // PUBLIER LA VIDÉO
+            // =========================
+
+            if (interaction.customId === "youtube_publish") {
+
+                const embed = interaction.message.embeds[0];
+
+                if (!embed || !embed.fields) {
+                    return interaction.reply({
+                        content: "❌ Impossible de récupérer les informations de la vidéo.",
+                        ephemeral: true
+                    });
+                }
+
+                const linkField = embed.fields.find(
+                    field => field.name === "🔗 Lien"
+                );
+
+                const messageField = embed.fields.find(
+                    field => field.name === "✏️ Message personnalisé"
+                );
+
+                if (!linkField) {
+                    return interaction.reply({
+                        content: "❌ Le lien YouTube est introuvable.",
+                        ephemeral: true
+                    });
+                }
+
+                const link = linkField.value;
+
+                const customMessage =
+                    messageField?.value &&
+                    messageField.value !== "Aucun message personnalisé."
+                        ? messageField.value
+                        : "";
+
+                const youtubeChannel =
+                    interaction.client.channels.cache.get(
+                        YOUTUBE_CHANNEL_ID
+                    );
+
+                if (!youtubeChannel) {
+                    return interaction.reply({
+                        content:
+                            "❌ Impossible de trouver le salon #youtube.",
+                        ephemeral: true
+                    });
+                }
+
+                const publicationEmbed =
+                    new EmbedBuilder()
+                        .setColor(0xFF0000)
+                        .setTitle("📺 Nouvelle vidéo YouTube !")
+                        .setURL(link)
+                        .setDescription(
+                            customMessage ||
+                            "DrolfoBot a publié une nouvelle vidéo !"
+                        )
+                        .addFields({
+                            name: "🔗 Regarder la vidéo",
+                            value: link
+                        })
+                        .setTimestamp();
+
+                await youtubeChannel.send({
+                    embeds: [publicationEmbed]
+                });
+
+                await interaction.update({
+                    content: "✅ La vidéo a été publiée avec succès dans #youtube !",
+                    embeds: [],
+                    components: []
+                });
+
+                return;
+            }
+
+
+            // =========================
+            // PROGRAMMER
+            // =========================
+
+            if (interaction.customId === "youtube_schedule") {
+
+                await interaction.reply({
+                    content:
+                        "🗓️ La programmation automatique sera ajoutée dans la prochaine étape.",
+                    ephemeral: true
+                });
+
+                return;
+            }
+
+
+            // =========================
+            // MENU VIDÉOS PROGRAMMÉES
+            // =========================
 
             if (interaction.customId === "youtube_scheduled") {
 
@@ -121,6 +223,10 @@ module.exports = {
             }
 
 
+            // =========================
+            // RETOUR AU PANNEAU
+            // =========================
+
             if (interaction.customId === "youtube_back") {
 
                 const embed = new EmbedBuilder()
@@ -134,7 +240,7 @@ module.exports = {
 
                         new ButtonBuilder()
                             .setCustomId("youtube_add")
-                            .setLabel("Ajouter une vidéo")
+                            .setLabel("Publier une vidéo")
                             .setStyle(ButtonStyle.Primary),
 
                         new ButtonBuilder()
@@ -152,25 +258,6 @@ module.exports = {
                 await interaction.update({
                     embeds: [embed],
                     components: [row]
-                });
-
-                return;
-            }
-
-
-            // -------------------------
-            // APERÇU YOUTUBE
-            // -------------------------
-
-            if (
-                interaction.customId === "youtube_publish" ||
-                interaction.customId === "youtube_schedule"
-            ) {
-
-                await interaction.reply({
-                    content:
-                        "Cette fonction sera activée dans la prochaine étape du système YouTube.",
-                    ephemeral: true
                 });
 
                 return;
@@ -206,9 +293,9 @@ module.exports = {
 
         if (interaction.isModalSubmit()) {
 
-            // -------------------------
+            // =========================
             // FORMULAIRE TICKET
-            // -------------------------
+            // =========================
 
             if (interaction.customId.startsWith("ticket_form_")) {
 
@@ -247,9 +334,9 @@ module.exports = {
             }
 
 
-            // -------------------------
+            // =========================
             // FORMULAIRE YOUTUBE
-            // -------------------------
+            // =========================
 
             if (
                 interaction.customId ===
@@ -277,10 +364,27 @@ module.exports = {
                 }
 
 
+                // Vérification simple du lien YouTube
+
+                const youtubeRegex =
+                    /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//i;
+
+                if (!youtubeRegex.test(link)) {
+
+                    await interaction.reply({
+                        content:
+                            "❌ Le lien fourni ne semble pas être un lien YouTube valide.",
+                        ephemeral: true
+                    });
+
+                    return;
+                }
+
+
                 const embed = new EmbedBuilder()
                     .setTitle("📺 Aperçu de la publication")
                     .setDescription(
-                        "Vérifie les informations avant de continuer."
+                        "Vérifie les informations avant de publier."
                     )
                     .addFields(
                         {
