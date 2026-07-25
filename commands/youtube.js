@@ -14,7 +14,7 @@ module.exports = {
     async execute(interaction) {
 
         const embed = new EmbedBuilder()
-            .setTitle("Panneau YouTube")
+            .setTitle("📺 Panneau YouTube")
             .setDescription(
                 "Bienvenue dans le panneau de gestion YouTube de DrolfoBot.\n\n" +
                 "Choisis une action ci-dessous."
@@ -29,8 +29,8 @@ module.exports = {
                     .setStyle(ButtonStyle.Primary),
 
                 new ButtonBuilder()
-                    .setCustomId("youtube_schedule")
-                    .setLabel("Programmer")
+                    .setCustomId("youtube_scheduled")
+                    .setLabel("Gérer les vidéos programmées")
                     .setStyle(ButtonStyle.Secondary),
 
                 new ButtonBuilder()
