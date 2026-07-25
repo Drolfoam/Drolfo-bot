@@ -12,6 +12,12 @@ const youtubeLink = require("../modals/youtubeLink");
 const youtubeSchedule = require("../modals/youtubeSchedule");
 const createTicket = require("../ticketSystem/createTicket");
 
+const {
+    addVideo,
+    getVideos,
+    removeVideo
+} = require("../scheduledVideos");
+
 const YOUTUBE_CHANNEL_ID = "1523787199009783858";
 
 module.exports = {
@@ -224,16 +230,13 @@ module.exports = {
                         error
                     );
 
-                    if (!interaction.replied) {
+                    await interaction.update({
+                        content:
+                            "❌ Impossible de publier la vidéo. Vérifie que Drolfo-bot a bien accès au salon #youtube.",
+                        embeds: [],
+                        components: []
+                    });
 
-                        await interaction.update({
-                            content:
-                                "❌ Impossible de publier la vidéo. Vérifie que Drolfo-bot a bien accès au salon #youtube.",
-                            embeds: [],
-                            components: []
-                        });
-
-                    }
                 }
 
                 return;
@@ -246,9 +249,56 @@ module.exports = {
 
             if (interaction.customId === "youtube_schedule") {
 
-                await interaction.showModal(
-                    youtubeSchedule.create()
+                const embed = interaction.message.embeds[0];
+
+                if (!embed || !embed.fields) {
+
+                    await interaction.reply({
+                        content:
+                            "❌ Impossible de récupérer les informations de la vidéo.",
+                        flags: MessageFlags.Ephemeral
+                    });
+
+                    return;
+                }
+
+                const linkField = embed.fields.find(
+                    field => field.name === "🔗 Lien"
                 );
+
+                const messageField = embed.fields.find(
+                    field => field.name === "✏️ Message personnalisé"
+                );
+
+                if (!linkField) {
+
+                    await interaction.reply({
+                        content:
+                            "❌ Le lien YouTube est introuvable.",
+                        flags: MessageFlags.Ephemeral
+                    });
+
+                    return;
+                }
+
+                const link = linkField.value.trim();
+
+                const message =
+                    messageField?.value &&
+                    messageField.value !==
+                        "Aucun message personnalisé."
+                        ? messageField.value
+                        : "";
+
+                // On garde les informations de la vidéo
+                // pour les récupérer après le formulaire
+                const modal =
+                    youtubeSchedule.create(
+                        link,
+                        message
+                    );
+
+                await interaction.showModal(modal);
 
                 return;
             }
@@ -260,27 +310,143 @@ module.exports = {
 
             if (interaction.customId === "youtube_scheduled") {
 
-                await interaction.update({
-                    embeds: [
-                        new EmbedBuilder()
-                            .setTitle("📅 Vidéos programmées")
-                            .setDescription(
-                                "Aucune vidéo programmée pour le moment."
-                            )
-                    ],
-                    components: [
+                const videos = getVideos();
+
+                if (videos.length === 0) {
+
+                    const embed = new EmbedBuilder()
+                        .setTitle("📅 Vidéos programmées")
+                        .setDescription(
+                            "Aucune vidéo programmée pour le moment."
+                        );
+
+                    const row = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId("youtube_back")
+                                .setLabel("Retour")
+                                .setStyle(
+                                    ButtonStyle.Secondary
+                                )
+                        );
+
+                    await interaction.update({
+                        embeds: [embed],
+                        components: [row]
+                    });
+
+                    return;
+                }
+
+                const embed =
+                    new EmbedBuilder()
+                        .setTitle("📅 Vidéos programmées")
+                        .setDescription(
+                            "Voici les vidéos qui seront publiées automatiquement :"
+                        );
+
+                const rows = [];
+
+                for (
+                    let i = 0;
+                    i < videos.length && i < 5;
+                    i++
+                ) {
+
+                    const video = videos[i];
+
+                    const date =
+                        new Date(video.publishAt);
+
+                    embed.addFields({
+                        name:
+                            `🎥 Vidéo ${i + 1}`,
+                        value:
+                            `🔗 ${video.link}\n` +
+                            `📅 ${date.toLocaleString(
+                                "fr-FR",
+                                {
+                                    dateStyle: "short",
+                                    timeStyle: "short"
+                                }
+                            )}\n` +
+                            `🆔 ${video.id}`
+                    });
+
+                    rows.push(
                         new ActionRowBuilder()
                             .addComponents(
                                 new ButtonBuilder()
                                     .setCustomId(
-                                        "youtube_back"
+                                        `youtube_delete_${video.id}`
                                     )
-                                    .setLabel("Retour")
+                                    .setLabel(
+                                        `Annuler vidéo ${i + 1}`
+                                    )
                                     .setStyle(
-                                        ButtonStyle.Secondary
+                                        ButtonStyle.Danger
                                     )
                             )
-                    ]
+                    );
+                }
+
+                rows.push(
+                    new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId("youtube_back")
+                                .setLabel("Retour")
+                                .setStyle(
+                                    ButtonStyle.Secondary
+                                )
+                        )
+                );
+
+                await interaction.update({
+                    embeds: [embed],
+                    components: rows
+                });
+
+                return;
+            }
+
+
+            // =========================
+            // YOUTUBE : SUPPRIMER
+            // UNE VIDÉO PROGRAMMÉE
+            // =========================
+
+            if (
+                interaction.customId.startsWith(
+                    "youtube_delete_"
+                )
+            ) {
+
+                const id =
+                    interaction.customId.replace(
+                        "youtube_delete_",
+                        ""
+                    );
+
+                const removed =
+                    removeVideo(id);
+
+                if (!removed) {
+
+                    await interaction.reply({
+                        content:
+                            "❌ Cette vidéo programmée n'existe plus.",
+                        flags: MessageFlags.Ephemeral
+                    });
+
+                    return;
+                }
+
+                await interaction.update({
+                    content:
+                        "✅ La vidéo programmée a été annulée.",
+                    embeds: [],
+                    components: []
                 });
 
                 return;
@@ -312,7 +478,7 @@ module.exports = {
                         new ButtonBuilder()
                             .setCustomId("youtube_scheduled")
                             .setLabel(
-                                "Vidéos programmées"
+                                "Gérer les vidéos programmées"
                             )
                             .setStyle(
                                 ButtonStyle.Secondary
@@ -534,8 +700,9 @@ module.exports = {
             // =========================
 
             if (
-                interaction.customId ===
-                "youtube_schedule_modal"
+                interaction.customId.startsWith(
+                    "youtube_schedule_modal"
+                )
             ) {
 
                 const date =
@@ -548,9 +715,84 @@ module.exports = {
                         "schedule_time"
                     ).trim();
 
+                // Récupération du lien et du message
+                // enregistrés dans le customId
+                const parts =
+                    interaction.customId.split("|");
+
+                const link =
+                    decodeURIComponent(
+                        parts[1] || ""
+                    );
+
+                const message =
+                    decodeURIComponent(
+                        parts[2] || ""
+                    );
+
+                // Vérification de la date
+                const dateTime =
+                    new Date(
+                        `${date}T${time}:00`
+                    );
+
+                if (
+                    isNaN(
+                        dateTime.getTime()
+                    )
+                ) {
+
+                    await interaction.reply({
+                        content:
+                            "❌ La date ou l'heure est invalide.\n\nUtilise par exemple : **25/07/2026** et **20:30**.",
+                        flags: MessageFlags.Ephemeral
+                    });
+
+                    return;
+                }
+
+                if (
+                    dateTime.getTime() <=
+                    Date.now()
+                ) {
+
+                    await interaction.reply({
+                        content:
+                            "❌ La date programmée doit être dans le futur.",
+                        flags: MessageFlags.Ephemeral
+                    });
+
+                    return;
+                }
+
+                const video = {
+
+                    id:
+                        Date.now().toString(),
+
+                    link: link,
+
+                    message: message,
+
+                    publishAt:
+                        dateTime.toISOString(),
+
+                    createdAt:
+                        new Date().toISOString(),
+
+                    createdBy:
+                        interaction.user.id
+
+                };
+
+                addVideo(video);
+
                 await interaction.reply({
                     content:
-                        `📅 Vidéo programmée pour le **${date}** à **${time}**.\n\n⚠️ Le système de publication automatique sera connecté à cette étape juste après.`,
+                        "✅ **Vidéo programmée avec succès !**\n\n" +
+                        `📅 Date : **${date}**\n` +
+                        `🕐 Heure : **${time}**\n` +
+                        `🔗 ${link}`,
                     flags: MessageFlags.Ephemeral
                 });
 
