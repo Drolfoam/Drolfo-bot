@@ -5,34 +5,69 @@ const {
     ActionRowBuilder
 } = require("discord.js");
 
-function create() {
-    const modal = new ModalBuilder()
-        .setCustomId("youtube_schedule_modal")
-        .setTitle("Programmer une vidéo");
+function create(link = "", message = "") {
 
-    const dateInput = new TextInputBuilder()
-        .setCustomId("schedule_date")
-        .setLabel("Date (JJ/MM/AAAA)")
-        .setPlaceholder("25/07/2026")
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
+    const safeLink =
+        encodeURIComponent(link);
 
-    const timeInput = new TextInputBuilder()
-        .setCustomId("schedule_time")
-        .setLabel("Heure (HH:MM)")
-        .setPlaceholder("20:30")
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
+    const safeMessage =
+        encodeURIComponent(message);
 
-    const dateRow = new ActionRowBuilder()
-        .addComponents(dateInput);
+    const modal =
+        new ModalBuilder()
+            .setCustomId(
+                `youtube_schedule_modal|${safeLink}|${safeMessage}`
+            )
+            .setTitle(
+                "📅 Programmer la vidéo"
+            );
 
-    const timeRow = new ActionRowBuilder()
-        .addComponents(timeInput);
+    const dateInput =
+        new TextInputBuilder()
+            .setCustomId(
+                "schedule_date"
+            )
+            .setLabel(
+                "Date de publication"
+            )
+            .setPlaceholder(
+                "Exemple : 25/07/2026"
+            )
+            .setStyle(
+                TextInputStyle.Short
+            )
+            .setRequired(true)
+            .setMaxLength(10);
+
+    const timeInput =
+        new TextInputBuilder()
+            .setCustomId(
+                "schedule_time"
+            )
+            .setLabel(
+                "Heure de publication"
+            )
+            .setPlaceholder(
+                "Exemple : 20:30"
+            )
+            .setStyle(
+                TextInputStyle.Short
+            )
+            .setRequired(true)
+            .setMaxLength(5);
 
     modal.addComponents(
-        dateRow,
-        timeRow
+
+        new ActionRowBuilder()
+            .addComponents(
+                dateInput
+            ),
+
+        new ActionRowBuilder()
+            .addComponents(
+                timeInput
+            )
+
     );
 
     return modal;
