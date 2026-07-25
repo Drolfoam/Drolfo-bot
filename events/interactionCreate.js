@@ -108,7 +108,8 @@ module.exports = {
 
                 if (!embed || !embed.fields) {
                     return interaction.reply({
-                        content: "❌ Impossible de récupérer les informations de la vidéo.",
+                        content:
+                            "❌ Impossible de récupérer les informations de la vidéo.",
                         ephemeral: true
                     });
                 }
@@ -123,16 +124,18 @@ module.exports = {
 
                 if (!linkField) {
                     return interaction.reply({
-                        content: "❌ Le lien YouTube est introuvable.",
+                        content:
+                            "❌ Le lien YouTube est introuvable.",
                         ephemeral: true
                     });
                 }
 
-                const link = linkField.value;
+                const link = linkField.value.trim();
 
                 const customMessage =
                     messageField?.value &&
-                    messageField.value !== "Aucun message personnalisé."
+                    messageField.value !==
+                        "Aucun message personnalisé."
                         ? messageField.value
                         : "";
 
@@ -169,7 +172,8 @@ module.exports = {
                 });
 
                 await interaction.update({
-                    content: "✅ La vidéo a été publiée avec succès dans #youtube !",
+                    content:
+                        "✅ La vidéo a été publiée avec succès dans #youtube !",
                     embeds: [],
                     components: []
                 });
@@ -195,7 +199,7 @@ module.exports = {
 
 
             // =========================
-            // MENU VIDÉOS PROGRAMMÉES
+            // VIDÉOS PROGRAMMÉES
             // =========================
 
             if (interaction.customId === "youtube_scheduled") {
@@ -214,7 +218,9 @@ module.exports = {
                                 new ButtonBuilder()
                                     .setCustomId("youtube_back")
                                     .setLabel("Retour")
-                                    .setStyle(ButtonStyle.Secondary)
+                                    .setStyle(
+                                        ButtonStyle.Secondary
+                                    )
                             )
                     ]
                 });
@@ -241,17 +247,25 @@ module.exports = {
                         new ButtonBuilder()
                             .setCustomId("youtube_add")
                             .setLabel("Publier une vidéo")
-                            .setStyle(ButtonStyle.Primary),
+                            .setStyle(
+                                ButtonStyle.Primary
+                            ),
 
                         new ButtonBuilder()
                             .setCustomId("youtube_scheduled")
-                            .setLabel("Vidéos programmées")
-                            .setStyle(ButtonStyle.Secondary),
+                            .setLabel(
+                                "Vidéos programmées"
+                            )
+                            .setStyle(
+                                ButtonStyle.Secondary
+                            ),
 
                         new ButtonBuilder()
                             .setCustomId("youtube_cancel")
                             .setLabel("Fermer")
-                            .setStyle(ButtonStyle.Danger)
+                            .setStyle(
+                                ButtonStyle.Danger
+                            )
 
                     );
 
@@ -274,10 +288,13 @@ module.exports = {
 
             if (interaction.customId === "variant_choice") {
 
-                const variante = interaction.values[0];
+                const variante =
+                    interaction.values[0];
 
                 const modal =
-                    ticketForm.createTicketForm(variante);
+                    ticketForm.createTicketForm(
+                        variante
+                    );
 
                 await interaction.showModal(modal);
 
@@ -297,7 +314,11 @@ module.exports = {
             // FORMULAIRE TICKET
             // =========================
 
-            if (interaction.customId.startsWith("ticket_form_")) {
+            if (
+                interaction.customId.startsWith(
+                    "ticket_form_"
+                )
+            ) {
 
                 const variante =
                     interaction.customId.replace(
@@ -346,7 +367,7 @@ module.exports = {
                 const link =
                     interaction.fields.getTextInputValue(
                         "youtube_link"
-                    );
+                    ).trim();
 
                 let message = "";
 
@@ -355,7 +376,7 @@ module.exports = {
                     message =
                         interaction.fields.getTextInputValue(
                             "youtube_message"
-                        );
+                        ).trim();
 
                 } catch {
 
@@ -364,12 +385,16 @@ module.exports = {
                 }
 
 
-                // Vérification simple du lien YouTube
+                // =========================
+                // VÉRIFICATION DU LIEN
+                // =========================
 
                 const youtubeRegex =
-                    /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//i;
+                    /^(https?:\/\/)?(www\.)?(m\.)?(youtube\.com|youtu\.be)\//i;
 
-                if (!youtubeRegex.test(link)) {
+                if (
+                    !youtubeRegex.test(link)
+                ) {
 
                     await interaction.reply({
                         content:
@@ -381,23 +406,31 @@ module.exports = {
                 }
 
 
-                const embed = new EmbedBuilder()
-                    .setTitle("📺 Aperçu de la publication")
-                    .setDescription(
-                        "Vérifie les informations avant de publier."
-                    )
-                    .addFields(
-                        {
-                            name: "🔗 Lien",
-                            value: link
-                        },
-                        {
-                            name: "✏️ Message personnalisé",
-                            value:
-                                message ||
-                                "Aucun message personnalisé."
-                        }
-                    );
+                // =========================
+                // APERÇU
+                // =========================
+
+                const embed =
+                    new EmbedBuilder()
+                        .setTitle(
+                            "📺 Aperçu de la publication"
+                        )
+                        .setDescription(
+                            "Vérifie les informations avant de publier."
+                        )
+                        .addFields(
+                            {
+                                name: "🔗 Lien",
+                                value: link
+                            },
+                            {
+                                name:
+                                    "✏️ Message personnalisé",
+                                value:
+                                    message ||
+                                    "Aucun message personnalisé."
+                            }
+                        );
 
 
                 const row =
