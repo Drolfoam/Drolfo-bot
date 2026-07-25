@@ -9,6 +9,7 @@ const {
 
 const ticketForm = require("../modals/ticketForm");
 const youtubeLink = require("../modals/youtubeLink");
+const youtubeSchedule = require("../modals/youtubeSchedule");
 const createTicket = require("../ticketSystem/createTicket");
 
 const YOUTUBE_CHANNEL_ID = "1523787199009783858";
@@ -195,10 +196,6 @@ module.exports = {
                     return;
                 }
 
-                // =========================
-                // MESSAGE YOUTUBE
-                // =========================
-
                 const messageContent =
                     "🚨 **Nouvelle vidéo de DrolfoamYT !** 🚨\n\n" +
                     "🎥 Une nouvelle vidéo est disponible !\n\n" +
@@ -249,11 +246,9 @@ module.exports = {
 
             if (interaction.customId === "youtube_schedule") {
 
-                await interaction.reply({
-                    content:
-                        "🗓️ La programmation automatique sera ajoutée dans la prochaine étape.",
-                    flags: MessageFlags.Ephemeral
-                });
+                await interaction.showModal(
+                    youtubeSchedule.create()
+                );
 
                 return;
             }
@@ -447,11 +442,6 @@ module.exports = {
 
                 }
 
-
-                // =========================
-                // VÉRIFICATION DU LIEN
-                // =========================
-
                 const youtubeRegex =
                     /^(https?:\/\/)?(www\.)?(m\.)?(youtube\.com|youtu\.be)\//i;
 
@@ -467,11 +457,6 @@ module.exports = {
 
                     return;
                 }
-
-
-                // =========================
-                // APERÇU
-                // =========================
 
                 const embed =
                     new EmbedBuilder()
@@ -494,7 +479,6 @@ module.exports = {
                                     "Aucun message personnalisé."
                             }
                         );
-
 
                 const row =
                     new ActionRowBuilder()
@@ -535,10 +519,38 @@ module.exports = {
 
                         );
 
-
                 await interaction.reply({
                     embeds: [embed],
                     components: [row],
+                    flags: MessageFlags.Ephemeral
+                });
+
+                return;
+            }
+
+
+            // =========================
+            // FORMULAIRE PROGRAMMATION
+            // =========================
+
+            if (
+                interaction.customId ===
+                "youtube_schedule_modal"
+            ) {
+
+                const date =
+                    interaction.fields.getTextInputValue(
+                        "schedule_date"
+                    ).trim();
+
+                const time =
+                    interaction.fields.getTextInputValue(
+                        "schedule_time"
+                    ).trim();
+
+                await interaction.reply({
+                    content:
+                        `📅 Vidéo programmée pour le **${date}** à **${time}**.\n\n⚠️ Le système de publication automatique sera connecté à cette étape juste après.`,
                     flags: MessageFlags.Ephemeral
                 });
 
