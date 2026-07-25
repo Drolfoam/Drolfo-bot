@@ -60,7 +60,7 @@ function removeVideo(id) {
     return true;
 }
 
-function startScheduler(client) {
+function startYoutubeScheduler(client) {
 
     console.log(
         "📅 Système de programmation YouTube activé !"
@@ -181,5 +181,5 @@ module.exports = {
     getVideos,
     addVideo,
     removeVideo,
-    startScheduler
+    startYoutubeScheduler
 };
